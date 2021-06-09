@@ -143,13 +143,13 @@ public class SoundFile {
 
         String name = f.getName().toLowerCase();
 
-        String[] components = name.split("\\.");
-        if (components.length < 2) {
-            return null;
-        }
-        if (!Arrays.asList(getSupportedExtensions()).contains(components[components.length - 1])) {
-            return null;
-        }
+        //String[] components = name.split("\\.");
+        //if (components.length < 2) {
+        //    return null;
+        //}
+        //if (!Arrays.asList(getSupportedExtensions()).contains(components[components.length - 1])) {
+        //    return null;
+        //}
         SoundFile soundFile = new SoundFile();
         //soundFile.setProgressListener(progressListener);
         soundFile.ReadFile(f);

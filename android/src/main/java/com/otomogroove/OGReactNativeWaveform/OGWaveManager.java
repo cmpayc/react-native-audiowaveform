@@ -1,6 +1,6 @@
 package com.otomogroove.OGReactNativeWaveform;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 import android.util.Log;
 
 import com.facebook.react.bridge.Arguments;
@@ -23,10 +23,12 @@ import java.io.File;
  * Created by juanjimenez on 13/01/2017.
  */
 
-public class OGWaveManager extends SimpleViewManager<OGWaveView> implements LifecycleEventListener,WaveformView.WaveformListener {
+public class OGWaveManager extends SimpleViewManager<OGWaveView> implements LifecycleEventListener {
 
     public static final String REACT_CLASS = "OGWave";
     private ReactContext mcontext;
+
+    private Boolean isNetwork;
 
     @Override
     public String getName() {
@@ -40,7 +42,6 @@ public class OGWaveManager extends SimpleViewManager<OGWaveView> implements Life
         mcontext = context;
 
         OGWaveView mWaveView = new OGWaveView(context);
-        mWaveView.setWaveformListener(this);
 
         return mWaveView;
     }
@@ -49,12 +50,14 @@ public class OGWaveManager extends SimpleViewManager<OGWaveView> implements Life
     public void onDropViewInstance(OGWaveView view) {
         super.onDropViewInstance(view);
 
-        SoundFile soundFile = view.getSoundFile();
+        if (this.isNetwork) {
+            SoundFile soundFile = view.getSoundFile();
 
-        if (soundFile != null) {
-            File file = new File(soundFile.getInputFile().getPath());
-            boolean deleted = file.delete();
-            Log.w("XSXGOT", "File deleted: " + deleted);
+            if (soundFile != null) {
+                File file = new File(soundFile.getInputFile().getPath());
+                boolean deleted = file.delete();
+                Log.w("XSXGOT", "File deleted: " + deleted);
+            }
         }
     }
 
@@ -77,8 +80,10 @@ public class OGWaveManager extends SimpleViewManager<OGWaveView> implements Life
         }
     }
 
-   @ReactProp(name = "src")
+    @ReactProp(name = "src")
     public void setSrc(OGWaveView view, @Nullable ReadableMap src) {
+        this.isNetwork = src.getBoolean("isNetwork");
+        view.setIsNetwork(this.isNetwork);
         view.setURI(src.getString("uri"));
     }
 
@@ -89,48 +94,18 @@ public class OGWaveManager extends SimpleViewManager<OGWaveView> implements Life
 
     }
 
-
-
-    @ReactProp(name = "autoPlay", defaultBoolean = false)
-    public void setAutoPlay(OGWaveView view, boolean autoPlay) {
-        Log.e("XSXSXS","setAutoPlay:::: "+autoPlay);
-        view.setAutoPlay(autoPlay);
-    }
-
-
     @ReactProp(name = "waveFormStyle")
     public void setWaveFormStyle(OGWaveView view, @Nullable ReadableMap waveFormStyle) {
-
-
         view.setmWaveColor(waveFormStyle.getInt("ogWaveColor"));
         view.setScrubColor(waveFormStyle.getInt("ogScrubColor"));
-    }
-    @ReactProp(name = "play")
-    public void setPlay(OGWaveView view, @Nullable boolean play) {
-
-            view.onPlay(play);
-
+        view.setBackgroundColor(waveFormStyle.getInt("ogBackgroundColor"));
     }
 
-    @ReactProp(name = "earpiece", defaultBoolean = false)
-    public void setEarpiece(OGWaveView view, boolean earpiece) {
-        view.setEarpiece(earpiece);
+    @ReactProp(name = "pos")
+    public void setPos(OGWaveView view, @Nullable float pos) {
+        Log.e("POSPOS","position:::: "+pos);
+        view.onPos(pos);
     }
-
-
-
-   /** @ReactProp(name = "pause")
-    public void setPause(OGWaveView view, @Nullable Callback pause){
-       // view.onPlay();
-
-    }
-
-    @ReactProp(name = "stop")
-    public void setStop(OGWaveView view, @Nullable Callback stop){
-        //view.onPlay();
-
-    }**/
-
 
     @Override
     public void onHostResume() {
@@ -152,60 +127,4 @@ public class OGWaveManager extends SimpleViewManager<OGWaveView> implements Life
                            @Nullable WritableMap params) {
         reactContext.getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter.class).emit(eventName, params);
     }
-
-    @Override
-    public void waveformTouchStart(ReactContext context, String componentID) {
-
-        WritableMap map = Arguments.createMap();
-        map.putString("componentID",componentID);
-        sendEvent(context, "OGOnPress",map);
-        Log.e("OGTAGDEBUG::", "waveformTouchStart: " );
-
-    }
-
-    @Override
-    public void waveformFinishPlay(ReactContext context, String componentID) {
-
-        WritableMap map = Arguments.createMap();
-        map.putString("componentID",componentID);
-        sendEvent(context, "OGFinishPlay",map);
-        Log.e("OGTAGDEBUG::", "waveformFinishPlay: " );
-
-    }
-
-    @Override
-    public void waveformTouchStart(float x) {
-
-    }
-
-    @Override
-    public void waveformTouchMove(float x) {
-
-    }
-
-    @Override
-    public void waveformTouchEnd() {
-
-    }
-
-    @Override
-    public void waveformFling(float x) {
-
-    }
-
-    @Override
-    public void waveformDraw() {
-
-    }
-
-    @Override
-    public void waveformZoomIn() {
-
-    }
-
-    @Override
-    public void waveformZoomOut() {
-
-    }
 }
-

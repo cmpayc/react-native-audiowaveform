@@ -58,8 +58,25 @@ import java.security.SecureRandom;
 public class WaveformView extends View {
     public void setmURI(String mURI) {
         this.mURI = mURI;
-        String filePath = tempPath + "/"+random()+".mp3";
-        new DownloadFileFromURL().execute(this.mURI,filePath);
+        if (isNetwork) {
+            String filePath = tempPath + "/"+random()+".mp3";
+            new DownloadFileFromURL().execute(this.mURI, filePath);
+        } else {
+            try {
+                SoundFile soundFile = SoundFile.create(this.mURI,null);
+                setSoundFile(soundFile);
+                recomputeHeights(8f);
+                invalidate();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } catch (SoundFile.InvalidInputException e) {
+                e.printStackTrace();
+            }
+        }
+    }
+
+    public void setIsNetwork(Boolean isNetwork) {
+        this.isNetwork = isNetwork;
     }
 
     public void setmWaveColor(int mWaveColor) {
@@ -182,18 +199,6 @@ public class WaveformView extends View {
         return new BigInteger(130, new SecureRandom()).toString(32);
     }
 
-    public interface WaveformListener {
-        public void waveformTouchStart(ReactContext context, String componentID);
-        public void waveformFinishPlay(ReactContext context, String componentID);
-        public void waveformTouchStart(float x);
-        public void waveformTouchMove(float x);
-        public void waveformTouchEnd();
-        public void waveformFling(float x);
-        public void waveformDraw();
-        public void waveformZoomIn();
-        public void waveformZoomOut();
-    };
-
     // Colors
     private Paint teswtPaint;
     private Paint mGridPaint;
@@ -205,6 +210,8 @@ public class WaveformView extends View {
     private Paint mTimecodePaint;
 
     private String mURI;
+
+    private Boolean isNetwork;
 
     private SoundFile mSoundFile;
     private int[] mLenByZoomLevel;
@@ -221,14 +228,13 @@ public class WaveformView extends View {
     private int mPlaybackPos;
     private float mDensity;
     private float mInitialScaleSpan;
-    private WaveformListener mListener;
     private GestureDetector mGestureDetector;
     private ScaleGestureDetector mScaleGestureDetector;
     private boolean mInitialized;
     private int mWaveColor;
     private OGWaveView waveView;
-    public static String tempPath; 
-    
+    public static String tempPath;
+
     public WaveformView(Context context, OGWaveView waveView) {
         super(context);
         tempPath = context.getFilesDir().getAbsolutePath();
@@ -384,32 +390,6 @@ public class WaveformView extends View {
                 (mSampleRate * z) + 0.5);
     }
 
-    public void setParameters(int start, int end, int offset) {
-        mSelectionStart = start;
-        mSelectionEnd = end;
-        mOffset = offset;
-    }
-
-    public int getStart() {
-        return mSelectionStart;
-    }
-
-    public int getEnd() {
-        return mSelectionEnd;
-    }
-
-    public int getOffset() {
-        return mOffset;
-    }
-
-    public void setPlayback(int pos) {
-        mPlaybackPos = pos;
-    }
-
-    public void setListener(WaveformListener listener) {
-        mListener = listener;
-    }
-
     public void recomputeHeights(float density) {
         mHeightsAtThisZoomLevel = null;
         mDensity = density;
@@ -427,7 +407,6 @@ public class WaveformView extends View {
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
-
 
         if (mSoundFile == null)
             return;

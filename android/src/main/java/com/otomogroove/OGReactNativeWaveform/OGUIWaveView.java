@@ -24,9 +24,6 @@ public class OGUIWaveView extends View {
 
     }
 
-
-
-
     public void updatePlayHead(float currentSeek){
         mCurrentSeek = currentSeek;
 
